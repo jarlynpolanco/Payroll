@@ -27,6 +27,7 @@ namespace Payroll.Api
             services.AddTransient<UnitOfWork<AppDbContext>>();
             services.AddTransient<EmployeeService>();
             services.AddTransient<FileManagementService>();
+            services.AddTransient<SftpManagementService>();
 
             services.AddSwaggerGen(s => {
                 s.SwaggerDoc("v1", new OpenApiInfo

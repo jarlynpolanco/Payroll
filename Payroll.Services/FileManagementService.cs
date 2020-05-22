@@ -4,19 +4,19 @@ using System.Collections.Generic;
 using System.Linq;
 using Payroll.Shared.Models;
 using System.IO;
-using Microsoft.Extensions.Options;
 
 namespace Payroll.Services
 {
     public class FileManagementService
     {
         private readonly EmployeeService _employeeService;
-        private readonly IOptions<AppSettings> _appSettings;
+        private readonly SftpManagementService _sftpManagementService;
 
-        public FileManagementService(EmployeeService employeeService, IOptions<AppSettings> appSettings)
+        public FileManagementService(EmployeeService employeeService,
+            SftpManagementService sftpManagementService)
         {
             _employeeService = employeeService;
-            _appSettings = appSettings;
+            _sftpManagementService = sftpManagementService;
         }
 
         public string GenerateOutPutFile(DateTime payrollDate) 
@@ -29,28 +29,35 @@ namespace Payroll.Services
 
             foreach(var item in employees) 
             {
-                var employeePayroll = item.Payrolls.FirstOrDefault(x => x.PayrollDate.Date == payrollDate.Date);
-                var payroll = new EmployeePayroll()
+                var payroll = item.Payrolls.FirstOrDefault(x => x.PayrollDate.Date == payrollDate.Date);
+                var employeePayroll = new EmployeePayroll()
                 {
                     AccountNumberSourceEntity = "11112681455",
                     DocumentNumberEmployee = item.DocumentNumber,
-                    NetIncome = (employeePayroll.NetSalary / 100).ToString(),
+                    NetIncome = payroll.NetSalary.ToString(),
                     RecordsNumber = rowsNumber.ToString(),
                     RncSourceEntity = "401005107"
                 };
-                payrollList.Add(payroll);
+                payrollList.Add(employeePayroll);
             }
-            string fullFileName = Path.Combine(_appSettings.Value.InputFilePath,
-                $"{Guid.NewGuid().ToString().Replace("-", string.Empty)}.txt");
+            string fileName = $"{Guid.NewGuid().ToString().Replace("-", string.Empty)}.txt";
 
-            engine.WriteFile(fullFileName, payrollList);
+            using (var stream = new MemoryStream())
+            using (var streamWriter = new StreamWriter(stream))
+            {
+                engine.WriteStream(streamWriter, payrollList);
+                streamWriter.AutoFlush = true;
+                stream.Position = 0;
 
-            return Path.GetFileName(fullFileName);
+                _sftpManagementService.SftpUploadFile(stream, fileName);
+            }
+
+            return fileName;
         }
 
         public IList<EmployeePayroll> GetOutPutFile(string fileName) 
         {
-            string fullFileName = Path.Combine(_appSettings.Value.InputFilePath, fileName);
+            var fullFileName = _sftpManagementService.SftpDownloadFile(fileName);
 
             return new FileHelperEngine<EmployeePayroll>().ReadFileAsList(fullFileName);
         }

@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Globalization;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Payroll.Services;
+using Payroll.Shared.Models;
 
 namespace Payroll.Api.Controllers
 {
@@ -17,15 +18,23 @@ namespace Payroll.Api.Controllers
         }
 
         [HttpGet("{payrollDate}")]
-        public IActionResult GeneratePayrollFile(DateTime payrollDate)
+        public ActionResult<GenericResponse<string>> GeneratePayrollFile(DateTime payrollDate)
         {
-            return Ok(_fileManagementService.GenerateOutPutFile(payrollDate));
+            return Ok(new GenericResponse<string>()
+            {
+                Data = _fileManagementService.GenerateOutPutFile(payrollDate),
+                Success = true
+            });
         }
 
         [HttpGet("{fileName}")]
-        public IActionResult ReadPayrollFile(string fileName)
+        public ActionResult<GenericResponse<IList<EmployeePayroll>>> ReadPayrollFile(string fileName)
         {
-            return Ok(_fileManagementService.GetOutPutFile(fileName));
+            return Ok(new GenericResponse<IList<EmployeePayroll>>()
+            {
+                Data = _fileManagementService.GetOutPutFile(fileName),
+                Success = true
+            });
         }
     }
 }
