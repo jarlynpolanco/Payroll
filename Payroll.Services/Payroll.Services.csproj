@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FileHelpers" Version="3.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Payroll.Data\Payroll.Data.csproj" />
+    <ProjectReference Include="..\Payroll.Shared\Payroll.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
