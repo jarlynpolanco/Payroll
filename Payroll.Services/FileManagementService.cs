@@ -5,6 +5,8 @@ using System.Linq;
 using Payroll.Shared.Models;
 using System.IO;
 using System.Text;
+using Microsoft.Extensions.Options;
+using Payroll.Shared.Statics;
 
 namespace Payroll.Services
 {
@@ -13,11 +15,12 @@ namespace Payroll.Services
         private readonly EmployeeService _employeeService;
         private readonly SftpManagementService _sftpManagementService;
 
-        public FileManagementService(EmployeeService employeeService,
-            SftpManagementService sftpManagementService)
+        public FileManagementService(EmployeeService employeeService, SftpManagementService sftpManagementService, 
+            IOptions<AppSettings> appSettings)
         {
             _employeeService = employeeService;
             _sftpManagementService = sftpManagementService;
+            ConnectionStrings.MySqlConnectionString = appSettings.Value.MySqlConnectionString;
         }
 
         public string GenerateOutPutFile(DateTime payrollDate) 
@@ -46,12 +49,11 @@ namespace Payroll.Services
                 Encoding = new UTF8Encoding(false),
                 HeaderText = engineHeader.WriteString(payrollHeader)
             };
-
             
             int rowsNumber = employees.Count();
             List<EmployeePayrollDetail> payrollList = new List<EmployeePayrollDetail>();
-        
-            foreach(var item in employees) 
+
+            employees.ToList().ForEach(item =>
             {
                 var payroll = item.Payrolls.FirstOrDefault(x => x.PayrollDate.Date == payrollDate.Date);
                 var employeePayroll = new EmployeePayrollDetail()
@@ -61,7 +63,8 @@ namespace Payroll.Services
                     DocumentNumber = item.DocumentNumber
                 };
                 payrollList.Add(employeePayroll);
-            }
+            });
+
             string fileName = $"{Guid.NewGuid().ToString().Replace("-", string.Empty)}.txt";
 
             using (var stream = new MemoryStream())

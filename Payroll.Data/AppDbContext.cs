@@ -1,25 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Payroll.Data.Abstractions;
 using Payroll.Data.Models;
-using Payroll.Shared.Models;
+using Payroll.Shared.Statics;
 using System.Threading.Tasks;
 
 namespace Payroll.Data
 {
     public class AppDbContext : DbContext, IDbContext
     {
-        private readonly IOptions<AppSettings> _appSettings;
-
-        public AppDbContext(IOptions<AppSettings> appSettings) 
-        {
-            _appSettings = appSettings;
-        }
-
-        public AppDbContext()
-        {
-        }
-
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Models.Payroll> Payrolls { get; set; }
 
@@ -27,7 +15,7 @@ namespace Payroll.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseMySQL("server=localhost;database=UNAPEC;user=root;password=root");
+            optionsBuilder.UseMySQL(ConnectionStrings.MySqlConnectionString);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
