@@ -21,13 +21,11 @@ namespace Payroll.Services
         {
             var sftpConnection = GetSftpConnection();
 
-            using (var sftp = new SftpClient(sftpConnection)) 
-            {
-                sftp.Connect();
-                sftp.UploadFile(fileStream, fileName);
-                sftp.ChangePermissions(fileName, 777);
-                sftp.Disconnect();
-            }
+            using var sftp = new SftpClient(sftpConnection);
+            sftp.Connect();
+            sftp.UploadFile(fileStream, fileName);
+            sftp.ChangePermissions(fileName, 777);
+            sftp.Disconnect();
         }
 
         public string SftpDownloadFile(string fileName)

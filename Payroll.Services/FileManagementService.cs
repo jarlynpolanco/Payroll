@@ -14,12 +14,14 @@ namespace Payroll.Services
     {
         private readonly EmployeeService _employeeService;
         private readonly SftpManagementService _sftpManagementService;
+        private readonly PgpEncryptionService _pgpEncryptionService;
 
         public FileManagementService(EmployeeService employeeService, SftpManagementService sftpManagementService, 
-            IOptions<AppSettings> appSettings)
+            PgpEncryptionService pgpEncryptionService, IOptions<AppSettings> appSettings)
         {
             _employeeService = employeeService;
             _sftpManagementService = sftpManagementService;
+            _pgpEncryptionService = pgpEncryptionService;
             ConnectionStrings.MySqlConnectionString = appSettings.Value.MySqlConnectionString;
         }
 
@@ -65,7 +67,7 @@ namespace Payroll.Services
                 payrollList.Add(employeePayroll);
             });
 
-            string fileName = $"{Guid.NewGuid().ToString().Replace("-", string.Empty)}.txt";
+            string fileName = $"{Guid.NewGuid().ToString().Replace("-", string.Empty)}.gpg";
 
             using (var stream = new MemoryStream())
             using (var streamWriter = new StreamWriter(stream))
@@ -74,24 +76,25 @@ namespace Payroll.Services
                 streamWriter.AutoFlush = true;
                 stream.Position = 0;
 
-                _sftpManagementService.SftpUploadFile(stream, fileName);
+                using var streamReader = new StreamReader(stream);
+                var encryptedFile = _pgpEncryptionService.EncryptStreamFile(streamReader);
+                _sftpManagementService.SftpUploadFile(encryptedFile, fileName);
             }
-
             return fileName;
         }
 
         public EmployeePayroll GetOutPutFile(string fileName) 
         {
-            var fullFileName = _sftpManagementService.SftpDownloadFile(fileName);
             var engineDetail = new FileHelperEngine<EmployeePayrollDetail>();
             var engineHeader = new FileHelperEngine<EmployeePayrollHeader>();
-
+            var fullFileName = _sftpManagementService.SftpDownloadFile(fileName);
+            var streamFile = _pgpEncryptionService.DescryptFileAsStream(fullFileName);
+            using TextReader textReader = new StreamReader(streamFile);
             var employeePayroll = new EmployeePayroll()
             {
-                EmployeePayrollDetail = engineDetail.ReadFileAsList(fullFileName),
+                EmployeePayrollDetail = engineDetail.ReadStream(textReader),
                 EmployeePayrollHeader = engineHeader.ReadString(engineDetail.HeaderText).FirstOrDefault()
             };
-
             return employeePayroll;
         }
     }
