@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Payroll.Services;
 using Payroll.Shared.Models;
@@ -28,9 +27,9 @@ namespace Payroll.Api.Controllers
         }
 
         [HttpGet("{fileName}")]
-        public ActionResult<GenericResponse<IList<EmployeePayroll>>> ReadPayrollFile(string fileName)
+        public ActionResult<GenericResponse<EmployeePayroll>> ReadPayrollFile(string fileName)
         {
-            return Ok(new GenericResponse<IList<EmployeePayroll>>()
+            return Ok(new GenericResponse<EmployeePayroll>()
             {
                 Data = _fileManagementService.GetOutPutFile(fileName),
                 Success = true

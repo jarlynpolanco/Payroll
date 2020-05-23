@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Payroll.Shared.Models;
 using System.IO;
+using System.Text;
 
 namespace Payroll.Services
 {
@@ -21,22 +22,43 @@ namespace Payroll.Services
 
         public string GenerateOutPutFile(DateTime payrollDate) 
         {
-            var engine = new FileHelperEngine<EmployeePayroll>();
-
             var employees = _employeeService.GetAll("Payrolls");
-            int rowsNumber = employees.Count();
-            List<EmployeePayroll> payrollList = new List<EmployeePayroll>();
+            var totalAmount = employees.Sum(x => x.Payrolls
+                .FirstOrDefault(p => p.PayrollDate.Date == payrollDate.Date).NetSalary);
 
+            var payrollHeader = new List<EmployeePayrollHeader>()
+            {
+                new EmployeePayrollHeader()
+                {
+                    CompanyRnc = "401005107",
+                    PayrollPaymentDay = payrollDate.Date.ToString("dd/MM/yyyy"),
+                    RowsQuantity = employees.Count().ToString(),
+                    SourceAccountNumber = "11112681455",
+                    TotalAmount = totalAmount.ToString(),
+                    TransmissionDate = DateTime.Now.ToString("dd/MM/yyyy")
+                } 
+            };
+
+            var engineHeader = new FileHelperEngine<EmployeePayrollHeader>();
+
+            var engine = new FileHelperEngine<EmployeePayrollDetail>()
+            {
+                Encoding = new UTF8Encoding(false),
+                HeaderText = engineHeader.WriteString(payrollHeader)
+            };
+
+            
+            int rowsNumber = employees.Count();
+            List<EmployeePayrollDetail> payrollList = new List<EmployeePayrollDetail>();
+        
             foreach(var item in employees) 
             {
                 var payroll = item.Payrolls.FirstOrDefault(x => x.PayrollDate.Date == payrollDate.Date);
-                var employeePayroll = new EmployeePayroll()
+                var employeePayroll = new EmployeePayrollDetail()
                 {
-                    AccountNumberSourceEntity = "11112681455",
-                    DocumentNumberEmployee = item.DocumentNumber,
                     NetIncome = payroll.NetSalary.ToString(),
-                    RecordsNumber = rowsNumber.ToString(),
-                    RncSourceEntity = "401005107"
+                    AccountNumber = item.AccountNumber,
+                    DocumentNumber = item.DocumentNumber
                 };
                 payrollList.Add(employeePayroll);
             }
@@ -55,11 +77,19 @@ namespace Payroll.Services
             return fileName;
         }
 
-        public IList<EmployeePayroll> GetOutPutFile(string fileName) 
+        public EmployeePayroll GetOutPutFile(string fileName) 
         {
             var fullFileName = _sftpManagementService.SftpDownloadFile(fileName);
+            var engineDetail = new FileHelperEngine<EmployeePayrollDetail>();
+            var engineHeader = new FileHelperEngine<EmployeePayrollHeader>();
 
-            return new FileHelperEngine<EmployeePayroll>().ReadFileAsList(fullFileName);
+            var employeePayroll = new EmployeePayroll()
+            {
+                EmployeePayrollDetail = engineDetail.ReadFileAsList(fullFileName),
+                EmployeePayrollHeader = engineHeader.ReadString(engineDetail.HeaderText).FirstOrDefault()
+            };
+
+            return employeePayroll;
         }
     }
 }
