@@ -21,7 +21,7 @@ namespace Payroll.Services
             using var outputFileStream = new MemoryStream();
             using Stream inputFileStream = File.OpenRead(encryptedFile);
             using Stream privateKeyStream = File.OpenRead(_appSettings.Value.PgpPrivateKey);
-            _pgpCore.DecryptStream(inputFileStream, outputFileStream, privateKeyStream, _appSettings.Value.PgpPassShare);
+            _pgpCore.DecryptStream(inputFileStream, outputFileStream, privateKeyStream, _appSettings.Value.PgpPassShared);
             return new MemoryStream(outputFileStream.ToArray());
         }
 

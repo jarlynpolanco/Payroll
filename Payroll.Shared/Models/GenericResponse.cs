@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Payroll.Shared.Models
+﻿namespace Payroll.Shared.Models
 {
     public class GenericResponse<T>
     {
         public GenericResponse() { }
         public bool Success { get; set; } = false;
+        public string Message { get; set; } 
         public T Data { get; set; }
     }
 }

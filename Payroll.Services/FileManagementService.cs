@@ -7,6 +7,8 @@ using System.IO;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Payroll.Shared.Statics;
+using Payroll.Shared.Exceptions;
+using System.Net;
 
 namespace Payroll.Services
 {
@@ -28,19 +30,28 @@ namespace Payroll.Services
         public string GenerateOutPutFile(DateTime payrollDate) 
         {
             var employees = _employeeService.GetAll("Payrolls");
-            var totalAmount = employees.Sum(x => x.Payrolls
-                .FirstOrDefault(p => p.PayrollDate.Date == payrollDate.Date).NetSalary);
+
+            if(employees == null || employees.Count() == 0)
+                throw new HttpStatusException($"No hay empleados disponibles. Favor revisar la fuente de datos.",
+                    HttpStatusCode.Forbidden);
+
+            var totalAmount = employees?.Sum(x => x.Payrolls
+                ?.FirstOrDefault(p => p.PayrollDate.Date == payrollDate.Date)?.NetSalary);
+
+            if(totalAmount == null || totalAmount < 1)
+                throw new HttpStatusException($"No hay nominas disponibles para la fecha indicada {payrollDate:dd/MM/yyyy}",
+                    HttpStatusCode.Forbidden);
 
             var payrollHeader = new List<EmployeePayrollHeader>()
             {
                 new EmployeePayrollHeader()
                 {
                     CompanyRnc = "401005107",
-                    PayrollPaymentDay = payrollDate.Date.ToString("dd/MM/yyyy"),
+                    PayrollPaymentDay = $"{payrollDate.Date:dd/MM/yyyy}",
                     RowsQuantity = employees.Count().ToString(),
                     SourceAccountNumber = "11112681455",
                     TotalAmount = totalAmount.ToString(),
-                    TransmissionDate = DateTime.Now.ToString("dd/MM/yyyy")
+                    TransmissionDate = $"{DateTime.Now:dd/MM/yyyy}"
                 } 
             };
 
@@ -87,7 +98,13 @@ namespace Payroll.Services
         {
             var engineDetail = new FileHelperEngine<EmployeePayrollDetail>();
             var engineHeader = new FileHelperEngine<EmployeePayrollHeader>();
+
             var fullFileName = _sftpManagementService.SftpDownloadFile(fileName);
+
+            if(!File.Exists(fullFileName))
+                throw new HttpStatusException($"El archivo con el nombre indicado: {fileName} no existe en el SFTP.",
+                    HttpStatusCode.Forbidden);
+
             var streamFile = _pgpEncryptionService.DescryptFileAsStream(fullFileName);
             using TextReader textReader = new StreamReader(streamFile);
             var employeePayroll = new EmployeePayroll()
@@ -95,6 +112,7 @@ namespace Payroll.Services
                 EmployeePayrollDetail = engineDetail.ReadStream(textReader),
                 EmployeePayrollHeader = engineHeader.ReadString(engineDetail.HeaderText).FirstOrDefault()
             };
+
             return employeePayroll;
         }
     }

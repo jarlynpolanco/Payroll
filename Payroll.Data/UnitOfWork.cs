@@ -12,6 +12,7 @@ namespace Payroll.Data
         private readonly Dictionary<Type, object> _repositories;
         private bool _disposed;
         private readonly TContext Context;
+
         public UnitOfWork()
         {
             this.Context = new TContext();
@@ -21,17 +22,10 @@ namespace Payroll.Data
 
         public IRepository<TEntity> GetRepository<TEntity>() where TEntity : class
         {
-            // Checks if the Dictionary Key contains the Model class
             if (_repositories.Keys.Contains(typeof(TEntity)))
-            {
-                // Return the repository for that Model class
                 return _repositories[typeof(TEntity)] as IRepository<TEntity>;
-            }
 
-            // If the repository for that Model class doesn't exist, create it
             var repository = new Repository<TEntity>(Context);
-
-            // Add it to the dictionary
             _repositories.Add(typeof(TEntity), repository);
 
             return repository;

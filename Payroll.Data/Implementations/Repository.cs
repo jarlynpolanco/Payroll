@@ -34,10 +34,8 @@ namespace Payroll.Data.Implementations
         public virtual T Get(Func<T, bool> predicate, string include) =>
             _dbset.Include(include).FirstOrDefault(predicate);
 
-        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate)
-        {
-            return await _dbset.AsNoTracking().Where(predicate).ToListAsync();
-        }
+        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate) =>
+             await _dbset.AsNoTracking().Where(predicate).ToListAsync();
 
         public virtual void Add(T entity) => _dbset.Add(entity);
 

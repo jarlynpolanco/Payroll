@@ -25,6 +25,7 @@ namespace Payroll.Services
             sftp.Connect();
             sftp.UploadFile(fileStream, fileName);
             sftp.ChangePermissions(fileName, 777);
+
             sftp.Disconnect();
         }
 
@@ -32,15 +33,18 @@ namespace Payroll.Services
         {
             var sftpConnection = GetSftpConnection();
             var outPutFileName = Path.Combine(_appSettings.Value.OutPutFilePath, fileName);
-            using (var sftp = new SftpClient(sftpConnection))
-            {
-                sftp.Connect();
-                using (Stream fileStream = File.Create(outPutFileName))
-                {
-                    sftp.DownloadFile(fileName, fileStream);
-                }
-                sftp.Disconnect();
-            }
+
+            using var sftp = new SftpClient(sftpConnection);
+            sftp.Connect();
+            using Stream fileStream = File.Create(outPutFileName);
+
+            if (!sftp.Exists(fileName))
+                return string.Empty;
+
+            sftp.DownloadFile(fileName, fileStream);    
+
+            sftp.Disconnect();
+
             return outPutFileName;
         }
 
