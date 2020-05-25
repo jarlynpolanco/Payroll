@@ -6,9 +6,9 @@ using Payroll.Shared.Models;
 using System.IO;
 using System.Text;
 using Microsoft.Extensions.Options;
-using Payroll.Shared.Statics;
 using Payroll.Shared.Exceptions;
 using System.Net;
+using Payroll.Shared.Settings;
 
 namespace Payroll.Services
 {
@@ -29,14 +29,14 @@ namespace Payroll.Services
 
         public string GenerateOutPutFile(DateTime payrollDate) 
         {
-            var employees = _employeeService.GetAll("Payrolls");
+            var employees = _employeeService.GetAll("PayrollsSheet");
 
             if(employees == null || employees.Count() == 0)
                 throw new HttpStatusException($"No hay empleados disponibles. Favor revisar la fuente de datos.",
                     HttpStatusCode.Forbidden);
 
-            var totalAmount = employees?.Sum(x => x.Payrolls
-                ?.FirstOrDefault(p => p.PayrollDate.Date == payrollDate.Date)?.NetSalary);
+            var totalAmount = employees?.Sum(x => x.PayrollsSheet?
+                .FirstOrDefault(p => p.PayrollDate.Date == payrollDate.Date)?.NetSalary);
 
             if(totalAmount == null || totalAmount < 1)
                 throw new HttpStatusException($"No hay nominas disponibles para la fecha indicada {payrollDate:dd/MM/yyyy}",
@@ -55,20 +55,19 @@ namespace Payroll.Services
                 } 
             };
 
-            var engineHeader = new FileHelperEngine<EmployeePayrollHeader>();
+            var fhEngineHeader = new FileHelperEngine<EmployeePayrollHeader>();
 
-            var engine = new FileHelperEngine<EmployeePayrollDetail>()
+            var fhEngineDetails = new FileHelperEngine<EmployeePayrollDetail>()
             {
                 Encoding = new UTF8Encoding(false),
-                HeaderText = engineHeader.WriteString(payrollHeader)
+                HeaderText = fhEngineHeader.WriteString(payrollHeader)
             };
             
-            int rowsNumber = employees.Count();
             List<EmployeePayrollDetail> payrollList = new List<EmployeePayrollDetail>();
 
             employees.ToList().ForEach(item =>
             {
-                var payroll = item.Payrolls.FirstOrDefault(x => x.PayrollDate.Date == payrollDate.Date);
+                var payroll = item.PayrollsSheet.FirstOrDefault(x => x.PayrollDate.Date == payrollDate.Date);
                 var employeePayroll = new EmployeePayrollDetail()
                 {
                     NetIncome = payroll.NetSalary.ToString(),
@@ -83,7 +82,7 @@ namespace Payroll.Services
             using (var stream = new MemoryStream())
             using (var streamWriter = new StreamWriter(stream))
             {
-                engine.WriteStream(streamWriter, payrollList);
+                fhEngineDetails.WriteStream(streamWriter, payrollList);
                 streamWriter.AutoFlush = true;
                 stream.Position = 0;
 
@@ -96,8 +95,8 @@ namespace Payroll.Services
 
         public EmployeePayroll GetOutPutFile(string fileName) 
         {
-            var engineDetail = new FileHelperEngine<EmployeePayrollDetail>();
-            var engineHeader = new FileHelperEngine<EmployeePayrollHeader>();
+            var fhEngineDetail = new FileHelperEngine<EmployeePayrollDetail>();
+            var fhEngineHeader = new FileHelperEngine<EmployeePayrollHeader>();
 
             var fullFileName = _sftpManagementService.SftpDownloadFile(fileName);
 
@@ -109,8 +108,8 @@ namespace Payroll.Services
             using TextReader textReader = new StreamReader(streamFile);
             var employeePayroll = new EmployeePayroll()
             {
-                EmployeePayrollDetail = engineDetail.ReadStream(textReader),
-                EmployeePayrollHeader = engineHeader.ReadString(engineDetail.HeaderText).FirstOrDefault()
+                EmployeePayrollDetail = fhEngineDetail.ReadStream(textReader),
+                EmployeePayrollHeader = fhEngineHeader.ReadString(fhEngineDetail.HeaderText).FirstOrDefault()
             };
 
             return employeePayroll;

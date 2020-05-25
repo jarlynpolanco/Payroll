@@ -1,5 +1,6 @@
 ﻿using Payroll.Data;
 using Payroll.Data.Models;
+using Payroll.Implementations;
 using System.Collections.Generic;
 
 namespace Payroll.Services
@@ -8,10 +9,8 @@ namespace Payroll.Services
     {
         private readonly UnitOfWork<AppDbContext> _unitOfWork;
 
-        public EmployeeService(UnitOfWork<AppDbContext> unitOfWork) 
-        {
+        public EmployeeService(UnitOfWork<AppDbContext> unitOfWork) =>
             _unitOfWork = unitOfWork;
-        }
 
         public IEnumerable<Employee> GetAll() => _unitOfWork.GetRepository<Employee>().GetAll();
 

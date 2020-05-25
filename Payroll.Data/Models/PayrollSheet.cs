@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Payroll.Data.Models
 {
     [Table("PAYROLL")]
-    public class Payroll
+    public class PayrollSheet
     {
         [Key]
         [Column("ID")]

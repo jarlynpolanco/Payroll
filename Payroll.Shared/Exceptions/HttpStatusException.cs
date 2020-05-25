@@ -7,9 +7,7 @@ namespace Payroll.Shared.Exceptions
     {
         public HttpStatusCode? StatusCode { get; set; }
 
-        public HttpStatusException(string message, HttpStatusCode statusCode) : base(message)
-        {
+        public HttpStatusException(string message, HttpStatusCode statusCode) : base(message) =>
             this.StatusCode = statusCode;
-        }
     }
 }

@@ -5,9 +5,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Payroll.Data;
+using Payroll.Implementations;
 using Payroll.Services;
 using Payroll.Shared.Middlewares;
-using Payroll.Shared.Models;
+using Payroll.Shared.Settings;
 
 namespace Payroll.Api
 {
@@ -64,7 +65,7 @@ namespace Payroll.Api
                 s.SwaggerEndpoint("/swagger/v1/swagger.json", "Payroll UNAPEC - APAP");
             });
 
-            app.UseMiddleware<HttpStatusCodeExceptionMiddleware>();
+            app.UseMiddleware<HttpStatusCodeException>();
 
             app.UseHttpsRedirection();
 

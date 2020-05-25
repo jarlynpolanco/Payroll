@@ -7,14 +7,12 @@ using System.Threading.Tasks;
 
 namespace Payroll.Shared.Middlewares
 {
-    public class HttpStatusCodeExceptionMiddleware
+    public class HttpStatusCodeException
     {
         private readonly RequestDelegate _next;
 
-        public HttpStatusCodeExceptionMiddleware(RequestDelegate next)
-        {
+        public HttpStatusCodeException(RequestDelegate next) =>
             this._next = next;
-        }
 
         public async Task Invoke(HttpContext context)
         {

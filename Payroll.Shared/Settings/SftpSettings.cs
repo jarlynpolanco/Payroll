@@ -1,4 +1,4 @@
-﻿namespace Payroll.Shared.Models
+﻿namespace Payroll.Shared.Settings
 {
     public class SftpSettings
     {

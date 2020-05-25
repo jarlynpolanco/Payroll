@@ -21,6 +21,6 @@ namespace Payroll.Data.Models
         [Column("ACCOUNT_NUMBER")]
         public string AccountNumber { get; set; }
 
-        public virtual IList<Payroll> Payrolls { get; set; }
+        public virtual IList<PayrollSheet> PayrollsSheet { get; set; }
     }
 }

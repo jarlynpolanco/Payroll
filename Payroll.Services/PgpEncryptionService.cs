@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
-using Payroll.Shared.Models;
+using Payroll.Shared.Settings;
 using PgpCore;
 using System.IO;
 

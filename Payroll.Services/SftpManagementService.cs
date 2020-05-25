@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
-using Payroll.Shared.Models;
+using Payroll.Shared.Settings;
 using Renci.SshNet;
 using System.IO;
 
@@ -7,15 +7,11 @@ namespace Payroll.Services
 {
     public class SftpManagementService
     {
-        private readonly SftpSettings _sftpSettings;
         private readonly IOptions<AppSettings> _appSettings;
         private ConnectionInfo _connectionInfo;
 
-        public SftpManagementService(IOptions<AppSettings> appSettings) 
-        {
-            _sftpSettings = appSettings.Value.SftpSettings;
+        public SftpManagementService(IOptions<AppSettings> appSettings) =>
             _appSettings = appSettings;
-        }
 
         public void SftpUploadFile(Stream fileStream, string fileName) 
         {
@@ -51,8 +47,11 @@ namespace Payroll.Services
         private ConnectionInfo GetSftpConnection() 
         {
             if(_connectionInfo == null)
-                _connectionInfo = new ConnectionInfo(_sftpSettings.SftpHost, _sftpSettings.SftpPort, _sftpSettings.SftpUserName,
-                       new PasswordAuthenticationMethod(_sftpSettings.SftpUserName, _sftpSettings.SftpPassword));
+                _connectionInfo = new ConnectionInfo(_appSettings.Value.SftpSettings.SftpHost,
+                    _appSettings.Value.SftpSettings.SftpPort, 
+                    _appSettings.Value.SftpSettings.SftpUserName,
+                       new PasswordAuthenticationMethod(_appSettings.Value.SftpSettings.SftpUserName, 
+                       _appSettings.Value.SftpSettings.SftpPassword));
 
             return _connectionInfo;
         }   

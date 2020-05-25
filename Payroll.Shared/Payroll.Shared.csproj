@@ -11,10 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="EncryptionKeys\PrivateKeyGpg.asc">
+    <None Update="GpgKeys\PrivateKeyGpg.asc">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="EncryptionKeys\PublicKeyGpg.asc">
+    <None Update="GpgKeys\PublicKeyGpg.asc">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

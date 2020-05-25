@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Payroll.Data
+namespace Payroll.Implementations
 {
     public class UnitOfWork<TContext> : IUnitOfWork where TContext : IDbContext, new()
     {

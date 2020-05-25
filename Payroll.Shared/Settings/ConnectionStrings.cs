@@ -1,4 +1,4 @@
-﻿namespace Payroll.Shared.Statics
+﻿namespace Payroll.Shared.Settings
 {
     public class ConnectionStrings
     {

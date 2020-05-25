@@ -11,10 +11,8 @@ namespace Payroll.Api.Controllers
     {
         private readonly FileManagementService _fileManagementService;
 
-        public PayrollController(FileManagementService fileManagementService) 
-        {
-            _fileManagementService = fileManagementService;
-        }
+        public PayrollController(FileManagementService fileManagementService) =>
+             _fileManagementService = fileManagementService;
 
         [HttpGet("{payrollDate}")]
         public ActionResult<GenericResponse<string>> GeneratePayrollFile(DateTime payrollDate)
